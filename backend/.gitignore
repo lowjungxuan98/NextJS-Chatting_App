@@ -1,9 +1,3 @@
 node_modules/
 /package-lock.json
-/dist/controllers/auth.controller.js
-/dist/controllers/conversation.controller.js
-/dist/middlewares/auth.middleware.js
-/dist/routes/auth.routes.js
-/dist/routes/conversation.routes.js
-/dist/index.js
-/dist/socket.js
+/dist/

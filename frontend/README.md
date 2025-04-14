@@ -1,142 +1,126 @@
-# Customer Service Chat - Frontend
+# Frontend Documentation
 
-A modern, real-time customer service chat application built with Next.js, TypeScript, and Socket.IO. This application allows end users to chat with merchant staff and provides a comprehensive dashboard for merchants to manage conversations.
-
-## Features
-
-- **Real-time Chat:** Instant messaging with Socket.IO integration
-- **Role-based Access Control:** Different interfaces for end users, staff, managers, and admins
-- **Responsive Design:** Works on all device sizes
-- **Modern UI:** Built with TailwindCSS for a clean, modern interface
+## Overview
+This is the frontend application for the chat service, built with Next.js, React, and Tailwind CSS.
 
 ## Prerequisites
-
-- Node.js (version 18 or higher recommended)
+- Node.js (v18 or higher)
 - npm or yarn
-- Backend API running (default: http://localhost:4000)
+- Backend service running
 
-## Installation
+## Getting Started
 
-1. Clone the repository
-2. Install dependencies:
-   ```bash
-   npm install
-   ```
-3. Create a `.env.local` file with the following content:
-   ```
-   NEXT_PUBLIC_API_URL=http://localhost:4000
-   ```
-4. Start the development server:
-   ```bash
-   npm run dev
-   ```
+### Installing Dependencies
+Install the required packages:
+```bash
+npm install
+```
 
-## Architecture
+### Running the Application
 
-This application is built using:
+#### Development Mode
+To run the application in development mode with hot-reloading:
+```bash
+npm run dev
+```
 
-- **Next.js 15+**: For server-side rendering and routing
-- **TypeScript**: For type safety
-- **TailwindCSS**: For styling
-- **Socket.IO Client**: For real-time communication
-- **Context API**: For state management
+The application will be available at http://localhost:3000.
 
-## Folder Structure
+#### Production Mode
+To run the application in production mode:
 
+1. Build the application:
+```bash
+npm run build
+```
+
+2. Start the server:
+```bash
+npm start
+```
+
+## Project Structure
 ```
 frontend/
-├── src/                   # Source code
-│   ├── app/               # Next.js app directory (routes)
-│   │   ├── (dashboard)/   # Protected routes for authenticated users
-│   │   ├── auth/          # Authentication-related pages
-│   │   └── unauthorized/  # Access denied page
-│   ├── components/        # Reusable UI components
-│   ├── contexts/          # React contexts for state management
-│   └── services/          # Services for API and Socket communication
-├── public/                # Static assets
-└── README.md              # Project documentation
+├── public/           # Static files
+├── src/
+│   ├── app/          # Next.js pages and layouts
+│   ├── components/   # Reusable React components
+│   ├── lib/          # Utility functions and helpers
+│   ├── hooks/        # Custom React hooks
+│   ├── services/     # API service modules
+│   ├── styles/       # Global styles
+│   └── types/        # TypeScript type definitions
 ```
 
-## Pages
+## Features
+- Real-time chat functionality with Socket.IO
+- Light and dark mode support via next-themes
+- Responsive design with Tailwind CSS
+- Secure authentication system
 
-### Public Pages
-- **Login (`/auth/login`)**: Authentication for all users
-- **Register (`/auth/register`)**: Registration for end users
-- **Unauthorized (`/unauthorized`)**: Shown when access is denied
+## Configuration
+The frontend connects to the backend API. Make sure the backend server is running before using the chat functionality.
 
-### End User Pages
-- **Merchant List (`/merchants`)**: Displays available merchants to chat with
-- **Conversations (`/conversations`)**: Lists user's conversations
-- **Chat (`/conversations/[id]`)**: Real-time chat interface
+### Environment Variables
+You can customize the application by creating a `.env.local` file in the root directory:
 
-### Merchant Staff Pages
-- **Dashboard (`/merchant/dashboard`)**: Shows statistics and conversations
-- **Conversations (`/conversations`)**: Lists all conversations for the merchant
-- **Chat (`/conversations/[id]`)**: Same chat interface with staff features
-- **Staff Management (`/merchant/staff`)**: For admin/managers to manage staff
+```
+NEXT_PUBLIC_API_URL=http://localhost:3001
+```
 
-## Authentication & Authorization
+## Component Overview
 
-The application uses JWT tokens for authentication, stored in `localStorage`. User roles determine access to different areas:
+### Key Components
+- **ChatInterface**: Main chat interface component
+- **MessageList**: Displays chat messages
+- **MessageInput**: Allows users to compose and send messages
+- **AuthForms**: Login and registration forms
+- **UserProfile**: Displays and allows editing of user information
 
-### User Types
-- **End User**: Can chat with merchants
-- **Merchant Staff**: Different abilities based on role
+## WebSocket Integration
+The application uses Socket.IO client to establish real-time communication with the backend:
 
-### Staff Roles
-- **Staff**: Can view and reply to assigned conversations
-- **Manager**: Can assign conversations and manage staff
-- **Admin**: Full access to all features, including staff management
+```javascript
+// Example from a socket connection hook
+import { io } from 'socket.io-client';
 
-## Components
+const socket = io('http://localhost:3001', {
+  auth: {
+    token: userToken
+  }
+});
 
-### Main Components
-- **Message**: Displays individual messages in the chat
-- **MessageInput**: Input field for sending messages
-- **ConversationListItem**: Shows conversation summary in lists
-- **MerchantCard**: Displays merchant information with option to start chat
-- **StaffSelector**: Interface for assigning staff to conversations
-- **Navbar**: Navigation bar with role-based links
-- **ProtectedRoute**: Access control component
+// Listen for incoming messages
+socket.on('message', (data) => {
+  // Handle new message
+});
 
-## Services
-
-### API Service
-Located at `src/services/api.ts`, handles all API requests for:
-- Authentication (login, register)
-- Conversations management
-- Messaging
-- Staff management
-
-### Socket Service
-Located at `src/services/socket.ts`, handles real-time updates:
-- New messages
-- Conversation assignments
-- Socket connection management
+// Send a message
+const sendMessage = (message) => {
+  socket.emit('message', message);
+};
+```
 
 ## Building for Production
-
-To build the application for production:
+When building for production, the application is optimized for performance:
 
 ```bash
 npm run build
 ```
 
-Then start the production server:
+This generates an optimized version of your application in the `.next` folder.
 
-```bash
-npm start
-```
+## Troubleshooting
 
-## Testing Users
+### Common Issues
+- **Connection issues with backend**: Ensure the backend server is running and the API URL is correctly configured
+- **Socket connection problems**: Check if your token authentication is working correctly
+- **UI rendering issues**: Make sure your browser supports all the features being used
 
-After setting up and connecting to the backend, you can use these test accounts:
-
-### End Users
-- john@example.com / password123
-- sarah@example.com / password123
-
-### Merchant Staff (TechStore)
-- admin@techstore.com / admin123
-- manager@techstore.com / manager123
-- staff1@techstore.com / staff123
+## Browser Compatibility
+The application is compatible with all modern browsers:
+- Chrome (latest)
+- Firefox (latest)
+- Safari (latest)
+- Edge (latest)

@@ -1,113 +1,117 @@
 # Backend Documentation
 
 ## Overview
-This is a real-time chat application backend built with Express.js, Socket.IO, and Prisma ORM. The system supports conversations between end users and merchant staff members, with authentication, real-time messaging, and conversation management capabilities.
-
-## Technologies
-- **Node.js/Express**: Web server framework
-- **Socket.IO**: Real-time bidirectional communication
-- **Prisma**: ORM for database access
-- **JWT**: Authentication and authorization
-- **Helmet**: Security middleware for Express
-- **dotenv**: Environment variable management
+This is the backend service for the chat application built with Express.js, TypeScript, and Prisma ORM with a PostgreSQL database.
 
 ## Prerequisites
-- Node.js and npm installed
-- PostgreSQL or another database supported by Prisma
-- Environment variables configured (.env file)
+- Node.js (v18 or higher)
+- npm or yarn
+- Docker and Docker Compose
 
-## Installation
+## Getting Started
 
+### Setting Up the Database
+The backend uses PostgreSQL which runs in Docker:
+
+1. Start the database container:
+   ```bash
+   docker-compose up -d
+   ```
+   This will start a PostgreSQL instance at `localhost:5432` with the following credentials:
+   - Username: postgres
+   - Password: postgres
+   - Database: chat_service
+
+### Database Initialization
+After the database container is running, you need to set up the database schema:
+
+1. Generate Prisma client:
+   ```bash
+   npm run prisma:generate
+   ```
+
+2. Run database migrations:
+   ```bash
+   npm run prisma:migrate
+   ```
+
+3. (Optional) Seed the database with initial data:
+   ```bash
+   npm run prisma:seed
+   ```
+
+### Installing Dependencies
+Install required packages:
 ```bash
-# Install dependencies
 npm install
-
-# Set up database with Prisma
-npx prisma migrate dev
 ```
 
-## Environment Variables
+### Running the Application
 
+#### Development Mode
+To run the application in development mode with hot-reloading:
+```bash
+npm run dev
+```
+The server will start at http://localhost:3001 (or the port specified in your .env file).
+
+#### Production Mode
+To run the application in production mode:
+1. Build the application:
+   ```bash
+   npm run build
+   ```
+
+2. Start the server:
+   ```bash
+   npm start
+   ```
+
+## Environment Variables
 Create a `.env` file in the root of the backend directory with the following variables:
 
 ```
-PORT=4000
-DATABASE_URL="postgresql://username:password@localhost:5432/database_name"
-JWT_SECRET="your_jwt_secret"
-FRONTEND_URL="http://localhost:3000"
-```
-
-## Project Structure
-
-```
-backend/
-├── src/
-│   ├── controllers/      # Request handlers
-│   ├── routes/           # API routes definition
-│   ├── middlewares/      # Middleware functions
-│   ├── config/           # Configuration files
-│   ├── utils/            # Utility functions
-│   ├── index.ts          # Main entry point
-│   └── socket.ts         # Socket.IO configuration
+DATABASE_URL="postgresql://postgres:postgres@localhost:5432/chat_service"
+JWT_SECRET="your-secret-key"
+PORT=3001
 ```
 
 ## API Endpoints
 
-### Authentication
-- `POST /api/auth/register` - User registration
-- `POST /api/auth/login` - User login
+The backend exposes the following main endpoints:
 
-### Conversations
-- `POST /api/conversations` - Start a new conversation
-- `GET /api/conversations` - Get list of user's conversations
-- `GET /api/conversations/:id` - Get conversation details with messages
-- `POST /api/conversations/:id/messages` - Send a message
-- `POST /api/conversations/:id/assign` - Assign a staff member to conversation
+- **Authentication**
+  - `POST /api/auth/login` - User login
+  - `POST /api/auth/register` - User registration
 
-### Merchants
-- `GET /api/merchants` - Get merchant information
+- **Chats**
+  - `GET /api/chats` - Get all chats
+  - `GET /api/chats/:id` - Get a specific chat
+  - `POST /api/chats` - Create a new chat
 
-### Staff
-- `GET /api/staff` - Get staff information
-- Additional staff management endpoints
+- **Messages**
+  - `GET /api/chats/:chatId/messages` - Get messages for a chat
+  - `POST /api/chats/:chatId/messages` - Send a message
 
-## Socket.IO Events
+## Websocket Communication
 
-### Client Events
-- `join_conversation` - Join a conversation room
-- `leave_conversation` - Leave a conversation room
+The backend uses Socket.IO for real-time communication:
 
-### Server Events
-- `new_message` - Notify about new messages
-- `error` - Error notifications
+- Events emitted:
+  - `message` - When a new message is sent
+  - `typing` - When a user is typing
 
-## Authentication
+- Events listened for:
+  - `message` - When a client sends a message
+  - `typing` - When a client is typing
 
-The system uses JWT for authentication:
-- Token is returned on successful login/registration
-- Token must be included in the Authorization header for API requests
-- Socket.IO connections require the token in handshake auth
+## Troubleshooting
 
-## User Types
-- `end_user`: Regular users who initiate conversations
-- `merchant_staff`: Staff users who respond to conversations (with roles: admin, manager, staff)
+If you encounter issues with the database connection:
+1. Ensure the Docker container is running: `docker ps`
+2. Check database logs: `docker logs <postgres-container-id>`
+3. Verify your DATABASE_URL in the .env file is correct
 
-## Development
-
-```bash
-# Start development server
-npm run dev
-```
-
-## Production
-
-```bash
-# Build the project
-npm run build
-
-# Start production server
-npm start
-```
-
-## Health Check
-- `GET /health` - Server health status endpoint
+For issues with Prisma:
+- Run `npx prisma migrate reset` to reset the database and run all migrations
+- Check if the database schema matches the Prisma schema
