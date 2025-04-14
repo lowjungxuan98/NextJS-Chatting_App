@@ -15,21 +15,36 @@ export default function ConversationListItem({ conversation, isActive = false }:
   
   // Format date to a readable format
   const formatDate = (dateString: string) => {
-    const date = new Date(dateString);
-    const now = new Date();
-    
-    // If it's today, show only time
-    if (date.toDateString() === now.toDateString()) {
-      return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    try {
+      // Ensure we have a valid date string
+      if (!dateString) return '';
+      
+      const date = new Date(dateString);
+      
+      // Check for invalid date
+      if (isNaN(date.getTime())) {
+        console.error(`Invalid date format: ${dateString}`);
+        return '';
+      }
+      
+      const now = new Date();
+      
+      // If it's today, show only time
+      if (date.toDateString() === now.toDateString()) {
+        return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+      }
+      
+      // If it's within the last week, show day name
+      if (now.getTime() - date.getTime() < 7 * 24 * 60 * 60 * 1000) {
+        return date.toLocaleDateString([], { weekday: 'short' });
+      }
+      
+      // Otherwise show date
+      return date.toLocaleDateString([], { month: 'short', day: 'numeric' });
+    } catch (error) {
+      console.error('Error formatting date:', error);
+      return '';
     }
-    
-    // If it's within the last week, show day name
-    if (now.getTime() - date.getTime() < 7 * 24 * 60 * 60 * 1000) {
-      return date.toLocaleDateString([], { weekday: 'short' });
-    }
-    
-    // Otherwise show date
-    return date.toLocaleDateString([], { month: 'short', day: 'numeric' });
   };
 
   const handleClick = () => {
@@ -50,7 +65,7 @@ export default function ConversationListItem({ conversation, isActive = false }:
       <div className="flex justify-between items-start">
         <div>
           <h3 className={`font-medium ${isActive ? 'text-indigo-800 dark:text-indigo-300' : 'text-gray-900 dark:text-gray-100'}`}>
-            {isEndUser() ? conversation.merchantName : `User #${conversation.userId}`}
+            {isEndUser() ? conversation.merchantName : `${conversation.endUserName}`}
           </h3>
           <p className="text-sm text-gray-600 dark:text-gray-400 truncate mt-1">
             {conversation.assignedStaffName && !isEndUser() && (
@@ -62,7 +77,7 @@ export default function ConversationListItem({ conversation, isActive = false }:
         </div>
         
         <div className="text-xs text-gray-500 dark:text-gray-400">
-          {formatDate(conversation.lastMessageAt)}
+          {formatDate(conversation.lastMessageTime)}
         </div>
       </div>
       

@@ -193,7 +193,7 @@ export default function ChatPage({ params }: ChatPageProps) {
         <div className="flex justify-between items-center">
           <div>
             <h1 className="text-xl font-semibold text-gray-900 dark:text-white">
-              {isEndUser() ? conversation.merchantName : `User #${conversation.userId}`}
+              {isEndUser() ? conversation.merchantName : `User ${conversation.endUserName}`}
             </h1>
             <p className="text-sm text-gray-500 dark:text-gray-400">
               {isEndUser() && conversation.assignedStaffName && (

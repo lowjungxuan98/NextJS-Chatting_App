@@ -36,26 +36,26 @@ export default function MessageInput({ conversationId, onMessageSent }: MessageI
   };
 
   return (
-    <div className="border-t p-3 bg-white dark:bg-gray-800">
-      <div className="flex items-end gap-2">
+    <div className="p-4 bg-white dark:bg-gray-800 shadow-sm">
+      <div className="flex gap-2">
         <textarea
           value={message}
           onChange={(e) => setMessage(e.target.value)}
           onKeyDown={handleKeyDown}
-          className="flex-grow rounded-lg border border-gray-300 dark:border-gray-600 p-2 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-700 dark:text-white dark:placeholder-gray-400 resize-none"
-          placeholder="Type your message..."
-          rows={2}
+          className="flex-grow bg-gray-100 dark:bg-gray-700 rounded-lg p-3 focus:ring-2 focus:ring-indigo-500 focus:outline-none dark:text-white resize-none"
+          placeholder="Type your message... (Enter to send)"
           disabled={isSending}
         />
         <button
           onClick={handleSendMessage}
           disabled={!message.trim() || isSending}
-          className="px-4 py-2 bg-indigo-600 dark:bg-indigo-700 text-white rounded-lg hover:bg-indigo-700 dark:hover:bg-indigo-600 disabled:opacity-50 disabled:cursor-not-allowed"
+          className="px-4 py-2 bg-indigo-600 dark:bg-indigo-700 text-white rounded-lg hover:bg-indigo-700 disabled:opacity-50"
+          aria-label="Send message"
         >
           {isSending ? (
             <div className="w-5 h-5 border-t-2 border-b-2 border-white rounded-full animate-spin"></div>
           ) : (
-            'Send'
+            "Send"
           )}
         </button>
       </div>

@@ -17,7 +17,16 @@ export default function MerchantCard({ merchant }: MerchantCardProps) {
   const handleStartChat = async () => {
     setLoading(true);
     try {
+      // Create a new conversation
       const response = await apiService.startConversation(merchant.id);
+      
+      // Send an initial message immediately
+      await apiService.sendMessage(
+        response.conversationId, 
+        `Hello! I'd like to chat with ${merchant.name}.`
+      );
+      
+      // Redirect to the conversation page
       router.push(`/conversations/${response.conversationId}`);
     } catch (error) {
       console.error('Failed to start conversation:', error);

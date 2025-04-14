@@ -46,13 +46,15 @@ export interface Message {
 
 export interface Conversation {
   id: number;
-  userId: number;
+  endUserId: number;
+  endUserName: string;
   merchantId: number;
   merchantName: string;
   assignedStaffId: number | null;
   assignedStaffName: string | null;
   startedAt: string;
   lastMessageAt: string;
+  lastMessageTime: string;
   lastMessage: string;
   unreadCount: number;
 }
