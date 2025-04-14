@@ -1,0 +1,78 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Merchant {
+  id            Int            @id @default(autoincrement())
+  name          String
+  users         User[]         // Staff members of this merchant
+  conversations Conversation[] // Conversations involving this merchant
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+
+  @@map("merchants")
+}
+
+model User {
+  id           Int            @id @default(autoincrement())
+  name         String
+  email        String         @unique
+  password     String
+  type         UserType       // 'end_user' or 'merchant_staff'
+  role         UserRole?      // 'admin', 'manager', 'staff', or null for end users
+  merchantId   Int?           // Null for end users
+  merchant     Merchant?      @relation(fields: [merchantId], references: [id])
+  sentMessages Message[]      @relation("SentMessages")
+  conversations Conversation[] @relation("UserConversations") // Conversations started by this user
+  assignedConversations Conversation[] @relation("AssignedConversations") // Conversations assigned to this staff member
+  createdAt    DateTime       @default(now())
+  updatedAt    DateTime       @updatedAt
+
+  @@map("users")
+}
+
+model Conversation {
+  id         Int       @id @default(autoincrement())
+  endUserId  Int       // The user who started the conversation
+  endUser    User      @relation("UserConversations", fields: [endUserId], references: [id])
+  merchantId Int       // The merchant involved in this conversation
+  merchant   Merchant  @relation(fields: [merchantId], references: [id])
+  assignedToId Int?    // The staff member assigned to this conversation (if any)
+  assignedTo User?     @relation("AssignedConversations", fields: [assignedToId], references: [id])
+  messages   Message[] // Messages in this conversation
+  startedAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+
+  @@map("conversations")
+}
+
+model Message {
+  id             Int          @id @default(autoincrement())
+  conversationId Int
+  conversation   Conversation @relation(fields: [conversationId], references: [id])
+  senderId       Int          // User who sent this message
+  sender         User         @relation("SentMessages", fields: [senderId], references: [id])
+  messageText    String
+  sentAt         DateTime     @default(now())
+
+  @@map("messages")
+}
+
+enum UserType {
+  end_user
+  merchant_staff
+}
+
+enum UserRole {
+  admin
+  manager
+  staff
+} 

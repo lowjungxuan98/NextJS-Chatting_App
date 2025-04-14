@@ -1,0 +1,24 @@
+{
+  "name": "chat-service-backend",
+  "version": "1.0.0",
+  "description": "Backend for customer service chat module",
+  "main": "src/index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "prisma:seed": "ts-node prisma/seed.ts"
+  },
+  "dependencies": {
+    "@prisma/client": "^6.6.0",
+    "@types/bcrypt": "^5.0.2",
+    "@types/node": "^22.14.1",
+    "bcrypt": "^5.1.1"
+  },
+  "devDependencies": {
+    "prisma": "^6.6.0",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.8.3"
+  },
+  "prisma": {
+    "seed": "ts-node prisma/seed.ts"
+  }
+}
