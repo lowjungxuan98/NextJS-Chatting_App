@@ -10,23 +10,46 @@ interface MerchantCardProps {
   merchant: Merchant;
 }
 
+// Logo component to handle merchant logo or initial
+const MerchantLogo = ({ name, logoUrl }: { name: string; logoUrl?: string }) => {
+  if (logoUrl) {
+    return (
+      <div className="relative w-12 h-12 mr-3 rounded-full overflow-hidden">
+        <Image
+          src={logoUrl}
+          alt={`${name} logo`}
+          fill
+          className="object-cover"
+        />
+      </div>
+    );
+  }
+  
+  return (
+    <div className="w-12 h-12 mr-3 rounded-full bg-indigo-100 dark:bg-indigo-900 flex items-center justify-center">
+      <span className="text-xl font-semibold text-indigo-600 dark:text-indigo-300">
+        {name.charAt(0)}
+      </span>
+    </div>
+  );
+};
+
 export default function MerchantCard({ merchant }: MerchantCardProps) {
   const [loading, setLoading] = useState(false);
   const router = useRouter();
+  const { id, name, description, logoUrl } = merchant;
 
   const handleStartChat = async () => {
     setLoading(true);
+    
     try {
-      // Create a new conversation
-      const response = await apiService.startConversation(merchant.id);
-      
-      // Send an initial message immediately
+      // Create conversation and send initial message
+      const response = await apiService.startConversation(id);
       await apiService.sendMessage(
         response.conversationId, 
-        `Hello! I'd like to chat with ${merchant.name}.`
+        `Hello! I'd like to chat with ${name}.`
       );
       
-      // Redirect to the conversation page
       router.push(`/conversations/${response.conversationId}`);
     } catch (error) {
       console.error('Failed to start conversation:', error);
@@ -40,28 +63,11 @@ export default function MerchantCard({ merchant }: MerchantCardProps) {
     <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md overflow-hidden">
       <div className="p-5">
         <div className="flex items-center mb-4">
-          {merchant.logoUrl ? (
-            <div className="relative w-12 h-12 mr-3 rounded-full overflow-hidden">
-              <Image
-                src={merchant.logoUrl}
-                alt={`${merchant.name} logo`}
-                fill
-                className="object-cover"
-              />
-            </div>
-          ) : (
-            <div className="w-12 h-12 mr-3 rounded-full bg-indigo-100 dark:bg-indigo-900 flex items-center justify-center">
-              <span className="text-xl font-semibold text-indigo-600 dark:text-indigo-300">
-                {merchant.name.charAt(0)}
-              </span>
-            </div>
-          )}
-          <div>
-            <h3 className="font-semibold text-lg text-gray-900 dark:text-white">{merchant.name}</h3>
-          </div>
+          <MerchantLogo name={name} logoUrl={logoUrl} />
+          <h3 className="font-semibold text-lg text-gray-900 dark:text-white">{name}</h3>
         </div>
         
-        <p className="text-gray-600 dark:text-gray-300 mb-4 line-clamp-2">{merchant.description}</p>
+        <p className="text-gray-600 dark:text-gray-300 mb-4 line-clamp-2">{description}</p>
         
         <button
           onClick={handleStartChat}

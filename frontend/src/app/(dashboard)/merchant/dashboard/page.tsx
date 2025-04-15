@@ -8,6 +8,77 @@ import { apiService, Conversation, StaffMember } from '@/services/api';
 import ConversationListItem from '@/components/ConversationListItem';
 import StaffSelector from '@/components/StaffSelector';
 
+// UI Components
+const LoadingSpinner = () => (
+  <div className="flex justify-center items-center h-64">
+    <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-indigo-500 dark:border-indigo-400"></div>
+  </div>
+);
+
+const ErrorMessage = ({ message }: { message: string }) => (
+  <div className="container mx-auto px-4 py-8">
+    <div className="bg-red-50 dark:bg-red-900/20 p-4 rounded-md text-red-700 dark:text-red-400 text-center">
+      {message}
+    </div>
+  </div>
+);
+
+const StatCard = ({ title, value }: { title: string; value: number }) => (
+  <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700">
+    <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">{title}</h3>
+    <p className="text-3xl font-bold text-indigo-600 dark:text-indigo-400">{value}</p>
+  </div>
+);
+
+const EmptyState = ({ message }: { message: string }) => (
+  <div className="bg-gray-50 dark:bg-gray-800 p-4 rounded-md text-gray-500 dark:text-gray-400 text-center">
+    {message}
+  </div>
+);
+
+const ConversationSection = ({ 
+  title, 
+  conversations, 
+  showStaffSelector, 
+  staffMembers, 
+  onAssignmentChange 
+}: { 
+  title: string; 
+  conversations: Conversation[]; 
+  showStaffSelector?: boolean;
+  staffMembers?: StaffMember[];
+  onAssignmentChange?: () => void;
+}) => (
+  <div className="mb-8">
+    <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">{title}</h2>
+    
+    {conversations.length === 0 ? (
+      <EmptyState message={`No ${title.toLowerCase()}`} />
+    ) : (
+      <div className="bg-white dark:bg-gray-800 shadow rounded-lg overflow-hidden">
+        {conversations.map((conversation) => (
+          <div key={conversation.id} className="border-b dark:border-gray-700 last:border-b-0">
+            <div className="p-4">
+              <ConversationListItem conversation={conversation} />
+              
+              {showStaffSelector && staffMembers && onAssignmentChange && (
+                <div className="mt-2 flex justify-end">
+                  <StaffSelector
+                    conversationId={conversation.id}
+                    staffMembers={staffMembers}
+                    currentAssignedStaffId={conversation.assignedStaffId}
+                    onAssignmentChange={onAssignmentChange}
+                  />
+                </div>
+              )}
+            </div>
+          </div>
+        ))}
+      </div>
+    )}
+  </div>
+);
+
 export default function MerchantDashboardPage() {
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [staffMembers, setStaffMembers] = useState<StaffMember[]>([]);
@@ -23,11 +94,10 @@ export default function MerchantDashboardPage() {
     }
   }, [loading, isMerchantStaff, router]);
 
-  // Fetch conversations and staff members
+  // Fetch data
   useEffect(() => {
     const fetchData = async () => {
       try {
-        setLoading(true);
         const [conversationsData, staffData] = await Promise.all([
           apiService.getConversations(),
           (isAdmin() || isManager()) ? apiService.getStaffMembers() : Promise.resolve([])
@@ -35,7 +105,7 @@ export default function MerchantDashboardPage() {
         
         setConversations(conversationsData);
         setStaffMembers(staffData);
-      } catch (err: any) {
+      } catch (err) {
         console.error('Error fetching data:', err);
         setError('Failed to load dashboard data. Please try again later.');
       } finally {
@@ -46,34 +116,20 @@ export default function MerchantDashboardPage() {
     fetchData();
   }, [isAdmin, isManager]);
 
-  // Filter conversations by assignment status
-  const unassignedConversations = conversations.filter(
-    conv => conv.assignedStaffId === null
-  );
-  const assignedToMeConversations = conversations.filter(
-    conv => conv.assignedStaffId === user?.id
-  );
+  // Handle assignment change
+  const handleAssignmentChange = () => {
+    apiService.getConversations().then(setConversations);
+  };
+
+  // Filter conversations
+  const unassignedConversations = conversations.filter(conv => conv.assignedStaffId === null);
+  const assignedToMeConversations = conversations.filter(conv => conv.assignedStaffId === user?.id);
   const otherAssignedConversations = conversations.filter(
     conv => conv.assignedStaffId !== null && conv.assignedStaffId !== user?.id
   );
 
-  if (loading) {
-    return (
-      <div className="flex justify-center items-center h-64">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-indigo-500 dark:border-indigo-400"></div>
-      </div>
-    );
-  }
-
-  if (error) {
-    return (
-      <div className="container mx-auto px-4 py-8">
-        <div className="bg-red-50 dark:bg-red-900/20 p-4 rounded-md text-red-700 dark:text-red-400 text-center">
-          {error}
-        </div>
-      </div>
-    );
-  }
+  if (loading) return <LoadingSpinner />;
+  if (error) return <ErrorMessage message={error} />;
 
   return (
     <div className="container mx-auto px-4 py-8">
@@ -101,107 +157,33 @@ export default function MerchantDashboardPage() {
 
       {/* Dashboard stats */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-        <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700">
-          <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">Unassigned</h3>
-          <p className="text-3xl font-bold text-indigo-600 dark:text-indigo-400">{unassignedConversations.length}</p>
-        </div>
-        
-        <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700">
-          <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">Assigned to me</h3>
-          <p className="text-3xl font-bold text-indigo-600 dark:text-indigo-400">{assignedToMeConversations.length}</p>
-        </div>
-        
-        <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700">
-          <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">Total active</h3>
-          <p className="text-3xl font-bold text-indigo-600 dark:text-indigo-400">{conversations.length}</p>
-        </div>
+        <StatCard title="Unassigned" value={unassignedConversations.length} />
+        <StatCard title="Assigned to me" value={assignedToMeConversations.length} />
+        <StatCard title="Total active" value={conversations.length} />
       </div>
 
-      {/* Unassigned conversations */}
-      <div className="mb-8">
-        <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">Unassigned Conversations</h2>
-        
-        {unassignedConversations.length === 0 ? (
-          <div className="bg-gray-50 dark:bg-gray-800 p-4 rounded-md text-gray-500 dark:text-gray-400 text-center">
-            No unassigned conversations
-          </div>
-        ) : (
-          <div className="bg-white dark:bg-gray-800 shadow rounded-lg overflow-hidden">
-            {unassignedConversations.map((conversation) => (
-              <div key={conversation.id} className="border-b dark:border-gray-700 last:border-b-0">
-                <div className="p-4">
-                  <ConversationListItem conversation={conversation} />
-                  
-                  {(isAdmin() || isManager()) && (
-                    <div className="mt-2 flex justify-end">
-                      <StaffSelector
-                        conversationId={conversation.id}
-                        staffMembers={staffMembers}
-                        currentAssignedStaffId={conversation.assignedStaffId}
-                        onAssignmentChange={() => {
-                          // Refresh conversations after assignment
-                          apiService.getConversations().then(setConversations);
-                        }}
-                      />
-                    </div>
-                  )}
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
-      </div>
-
-      {/* My assigned conversations */}
-      <div className="mb-8">
-        <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">My Conversations</h2>
-        
-        {assignedToMeConversations.length === 0 ? (
-          <div className="bg-gray-50 dark:bg-gray-800 p-4 rounded-md text-gray-500 dark:text-gray-400 text-center">
-            No conversations assigned to you
-          </div>
-        ) : (
-          <div className="bg-white dark:bg-gray-800 shadow rounded-lg overflow-hidden">
-            {assignedToMeConversations.map((conversation) => (
-              <ConversationListItem key={conversation.id} conversation={conversation} />
-            ))}
-          </div>
-        )}
-      </div>
-
-      {/* Other assigned conversations */}
+      {/* Conversation sections */}
+      <ConversationSection 
+        title="Unassigned Conversations" 
+        conversations={unassignedConversations}
+        showStaffSelector={isAdmin() || isManager()}
+        staffMembers={staffMembers}
+        onAssignmentChange={handleAssignmentChange}
+      />
+      
+      <ConversationSection 
+        title="My Conversations" 
+        conversations={assignedToMeConversations}
+      />
+      
       {(isAdmin() || isManager()) && (
-        <div>
-          <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">Other Assigned Conversations</h2>
-          
-          {otherAssignedConversations.length === 0 ? (
-            <div className="bg-gray-50 dark:bg-gray-800 p-4 rounded-md text-gray-500 dark:text-gray-400 text-center">
-              No conversations assigned to other staff members
-            </div>
-          ) : (
-            <div className="bg-white dark:bg-gray-800 shadow rounded-lg overflow-hidden">
-              {otherAssignedConversations.map((conversation) => (
-                <div key={conversation.id} className="border-b dark:border-gray-700 last:border-b-0">
-                  <div className="p-4">
-                    <ConversationListItem conversation={conversation} />
-                    
-                    <div className="mt-2 flex justify-end">
-                      <StaffSelector
-                        conversationId={conversation.id}
-                        staffMembers={staffMembers}
-                        currentAssignedStaffId={conversation.assignedStaffId}
-                        onAssignmentChange={() => {
-                          // Refresh conversations after assignment
-                          apiService.getConversations().then(setConversations);
-                        }}
-                      />
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
+        <ConversationSection 
+          title="Other Assigned Conversations" 
+          conversations={otherAssignedConversations}
+          showStaffSelector={true}
+          staffMembers={staffMembers}
+          onAssignmentChange={handleAssignmentChange}
+        />
       )}
     </div>
   );

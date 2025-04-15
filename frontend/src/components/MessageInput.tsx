@@ -8,18 +8,25 @@ interface MessageInputProps {
   onMessageSent?: () => void;
 }
 
+// Simple loading spinner component
+const LoadingSpinner = () => (
+  <div className="w-5 h-5 border-t-2 border-b-2 border-white rounded-full animate-spin"></div>
+);
+
 export default function MessageInput({ conversationId, onMessageSent }: MessageInputProps) {
   const [message, setMessage] = useState('');
   const [isSending, setIsSending] = useState(false);
 
+  const isMessageEmpty = !message.trim();
+  
   const handleSendMessage = async () => {
-    if (!message.trim() || isSending) return;
+    if (isMessageEmpty || isSending) return;
     
     setIsSending(true);
     try {
       await apiService.sendMessage(conversationId, message);
       setMessage('');
-      if (onMessageSent) onMessageSent();
+      onMessageSent?.();
     } catch (error) {
       console.error('Failed to send message:', error);
       alert('Failed to send message. Please try again.');
@@ -48,15 +55,11 @@ export default function MessageInput({ conversationId, onMessageSent }: MessageI
         />
         <button
           onClick={handleSendMessage}
-          disabled={!message.trim() || isSending}
+          disabled={isMessageEmpty || isSending}
           className="px-4 py-2 bg-indigo-600 dark:bg-indigo-700 text-white rounded-lg hover:bg-indigo-700 disabled:opacity-50"
           aria-label="Send message"
         >
-          {isSending ? (
-            <div className="w-5 h-5 border-t-2 border-b-2 border-white rounded-full animate-spin"></div>
-          ) : (
-            "Send"
-          )}
+          {isSending ? <LoadingSpinner /> : "Send"}
         </button>
       </div>
     </div>

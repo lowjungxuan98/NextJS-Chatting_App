@@ -1,9 +1,53 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, ReactNode, ChangeEvent, FormEvent } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { apiService } from '@/services/api';
+
+interface FormInputProps {
+  id: string;
+  label: string;
+  type?: string;
+  value: string;
+  onChange: (e: ChangeEvent<HTMLInputElement>) => void;
+  placeholder?: string;
+  required?: boolean;
+  rightElement?: ReactNode;
+  hint?: string;
+}
+
+const FormInput = ({
+  id,
+  label,
+  type = 'text',
+  value,
+  onChange,
+  placeholder,
+  required = true,
+  rightElement,
+  hint
+}: FormInputProps) => (
+  <div>
+    <div className="flex items-center justify-between mb-1">
+      <label htmlFor={id} className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+        {label}
+      </label>
+      {rightElement}
+    </div>
+    <input
+      id={id}
+      name={id}
+      type={type}
+      required={required}
+      value={value}
+      onChange={onChange}
+      className="w-full px-4 py-3 border border-gray-200 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent dark:bg-gray-700 dark:text-white transition-all duration-200"
+      placeholder={placeholder}
+    />
+    {hint && <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">{hint}</p>}
+  </div>
+);
 
 export default function RegisterPage() {
   const [formData, setFormData] = useState({
@@ -16,12 +60,12 @@ export default function RegisterPage() {
   const [loading, setLoading] = useState(false);
   const router = useRouter();
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleChange = (e: ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
     setError('');
 
@@ -39,8 +83,7 @@ export default function RegisterPage() {
     setLoading(true);
 
     try {
-      // For the registration page, we only allow end users to register
-      // Merchant staff are added by admins
+      // Register user (end users only)
       const response = await apiService.register({
         name: formData.name,
         email: formData.email,
@@ -48,11 +91,8 @@ export default function RegisterPage() {
         type: 'end_user',
       });
 
-      // Store token and user data
       localStorage.setItem('auth_token', response.token);
       localStorage.setItem('user', JSON.stringify(response.user));
-
-      // Redirect to conversations page
       router.push('/conversations');
     } catch (err: any) {
       setError(err.message);
@@ -63,8 +103,7 @@ export default function RegisterPage() {
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-800">
-      <div className="w-full max-w-md px-8 py-10 bg-white dark:bg-gray-800 rounded-xl shadow-lg transform transition-all duration-300 hover:shadow-xl">
-        {/* Logo placeholder */}
+      <div className="w-full max-w-md px-8 py-10 bg-white dark:bg-gray-800 rounded-xl shadow-lg">
         <div className="flex justify-center mb-6">
           <div className="w-14 h-14 bg-indigo-600 dark:bg-indigo-700 rounded-full flex items-center justify-center text-white text-2xl font-bold">
             C
@@ -75,83 +114,52 @@ export default function RegisterPage() {
         <p className="text-center text-gray-500 dark:text-gray-400 mb-6">Join our community today</p>
         
         {error && (
-          <div className="mb-4 p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-400 rounded-lg transition-all duration-300 ease-in-out">
+          <div className="mb-4 p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-400 rounded-lg">
             {error}
           </div>
         )}
         
         <form onSubmit={handleSubmit} className="space-y-4">
-          <div>
-            <label htmlFor="name" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-              Full Name
-            </label>
-            <input
-              id="name"
-              name="name"
-              type="text"
-              required
-              value={formData.name}
-              onChange={handleChange}
-              className="w-full px-4 py-3 border border-gray-200 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent dark:bg-gray-700 dark:text-white transition-all duration-200"
-              placeholder="John Doe"
-            />
-          </div>
+          <FormInput
+            id="name"
+            label="Full Name"
+            value={formData.name}
+            onChange={handleChange}
+            placeholder="John Doe"
+          />
           
-          <div>
-            <label htmlFor="email" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-              Email
-            </label>
-            <input
-              id="email"
-              name="email"
-              type="email"
-              required
-              value={formData.email}
-              onChange={handleChange}
-              className="w-full px-4 py-3 border border-gray-200 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent dark:bg-gray-700 dark:text-white transition-all duration-200"
-              placeholder="you@example.com"
-            />
-          </div>
+          <FormInput
+            id="email"
+            label="Email"
+            type="email"
+            value={formData.email}
+            onChange={handleChange}
+            placeholder="you@example.com"
+          />
           
-          <div>
-            <label htmlFor="password" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-              Password
-            </label>
-            <input
-              id="password"
-              name="password"
-              type="password"
-              required
-              value={formData.password}
-              onChange={handleChange}
-              className="w-full px-4 py-3 border border-gray-200 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent dark:bg-gray-700 dark:text-white transition-all duration-200"
-              placeholder="••••••••"
-            />
-            <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
-              Password must be at least 6 characters
-            </p>
-          </div>
+          <FormInput
+            id="password"
+            label="Password"
+            type="password"
+            value={formData.password}
+            onChange={handleChange}
+            placeholder="••••••••"
+            hint="Password must be at least 6 characters"
+          />
           
-          <div>
-            <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-              Confirm Password
-            </label>
-            <input
-              id="confirmPassword"
-              name="confirmPassword"
-              type="password"
-              required
-              value={formData.confirmPassword}
-              onChange={handleChange}
-              className="w-full px-4 py-3 border border-gray-200 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent dark:bg-gray-700 dark:text-white transition-all duration-200"
-              placeholder="••••••••"
-            />
-          </div>
+          <FormInput
+            id="confirmPassword"
+            label="Confirm Password"
+            type="password"
+            value={formData.confirmPassword}
+            onChange={handleChange}
+            placeholder="••••••••"
+          />
           
           <button
             type="submit"
             disabled={loading}
-            className="w-full mt-6 bg-indigo-600 dark:bg-indigo-700 text-white py-3 px-4 rounded-lg hover:bg-indigo-700 dark:hover:bg-indigo-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 font-medium transition-all duration-200 transform hover:translate-y-[-1px]"
+            className="w-full mt-6 bg-indigo-600 dark:bg-indigo-700 text-white py-3 px-4 rounded-lg hover:bg-indigo-700 dark:hover:bg-indigo-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 font-medium"
           >
             {loading ? (
               <span className="flex items-center justify-center">
@@ -168,7 +176,7 @@ export default function RegisterPage() {
         <div className="mt-8 text-center">
           <p className="text-sm text-gray-600 dark:text-gray-400">
             Already have an account?{' '}
-            <Link href="/auth/login" className="text-indigo-600 dark:text-indigo-400 hover:text-indigo-800 dark:hover:text-indigo-300 font-medium transition-colors duration-200">
+            <Link href="/auth/login" className="text-indigo-600 dark:text-indigo-400 hover:text-indigo-800 dark:hover:text-indigo-300 font-medium">
               Sign in
             </Link>
           </p>

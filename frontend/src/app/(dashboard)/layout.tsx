@@ -5,6 +5,12 @@ import { useRouter } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
 import Navbar from '@/components/Navbar';
 
+const LoadingSpinner = () => (
+  <div className="flex h-screen items-center justify-center">
+    <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-indigo-500"></div>
+  </div>
+);
+
 export default function DashboardLayout({
   children,
 }: {
@@ -19,17 +25,8 @@ export default function DashboardLayout({
     }
   }, [isLoading, isAuthenticated, router]);
 
-  if (isLoading) {
-    return (
-      <div className="flex h-screen items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-indigo-500"></div>
-      </div>
-    );
-  }
-
-  if (!isAuthenticated) {
-    return null; // We're redirecting, so don't render anything
-  }
+  if (isLoading) return <LoadingSpinner />;
+  if (!isAuthenticated) return null; // Redirecting, don't render anything
 
   return (
     <div className="min-h-screen flex flex-col bg-gray-50 dark:bg-gray-900">

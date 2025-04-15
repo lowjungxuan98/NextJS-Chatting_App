@@ -4,31 +4,37 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 
+interface FeatureCardProps {
+  title: string;
+  description: string;
+}
+
+const FeatureCard = ({ title, description }: FeatureCardProps) => (
+  <div className="p-6 border border-gray-200 rounded-lg">
+    <h2 className="text-xl font-semibold mb-3">{title}</h2>
+    <p className="text-gray-600">{description}</p>
+  </div>
+);
+
 export default function Home() {
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    // Check if the user is already authenticated
     const token = localStorage.getItem('auth_token');
-    const user = localStorage.getItem('user');
+    const userStr = localStorage.getItem('user');
     
-    if (token && user) {
-      try {
-        const userData = JSON.parse(user);
-        // Redirect based on user type
-        if (userData.type === 'end_user') {
-          router.push('/merchants');
-        } else if (userData.type === 'merchant_staff') {
-          router.push('/conversations');
-        }
-      } catch (error) {
-        console.error('Error parsing user data:', error);
-        // In case of error, we still show the landing page
-        setIsLoading(false);
-      }
-    } else {
-      // No authentication, show the landing page
+    if (!token || !userStr) {
+      setIsLoading(false);
+      return;
+    }
+    
+    try {
+      const user = JSON.parse(userStr);
+      const route = user.type === 'end_user' ? '/merchants' : '/conversations';
+      router.push(route);
+    } catch (error) {
+      console.error('Error parsing user data:', error);
       setIsLoading(false);
     }
   }, [router]);
@@ -40,6 +46,21 @@ export default function Home() {
       </div>
     );
   }
+
+  const features = [
+    {
+      title: "Real-time Chat",
+      description: "Instant messaging with merchants to resolve your inquiries quickly."
+    },
+    {
+      title: "Staff Support",
+      description: "Get help from dedicated merchant staff members."
+    },
+    {
+      title: "Secure & Private",
+      description: "Your conversations are private and securely stored."
+    }
+  ];
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center bg-white">
@@ -67,26 +88,13 @@ export default function Home() {
         </div>
         
         <div className="mt-12 grid grid-cols-1 md:grid-cols-3 gap-8">
-          <div className="p-6 border border-gray-200 rounded-lg">
-            <h2 className="text-xl font-semibold mb-3">Real-time Chat</h2>
-            <p className="text-gray-600">
-              Instant messaging with merchants to resolve your inquiries quickly.
-            </p>
-          </div>
-          
-          <div className="p-6 border border-gray-200 rounded-lg">
-            <h2 className="text-xl font-semibold mb-3">Staff Support</h2>
-            <p className="text-gray-600">
-              Get help from dedicated merchant staff members.
-            </p>
-          </div>
-          
-          <div className="p-6 border border-gray-200 rounded-lg">
-            <h2 className="text-xl font-semibold mb-3">Secure & Private</h2>
-            <p className="text-gray-600">
-              Your conversations are private and securely stored.
-            </p>
-          </div>
+          {features.map((feature, index) => (
+            <FeatureCard 
+              key={index}
+              title={feature.title}
+              description={feature.description}
+            />
+          ))}
         </div>
       </div>
     </div>
